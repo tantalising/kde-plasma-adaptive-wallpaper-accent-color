@@ -1,6 +1,7 @@
 #include <QCoreApplication>
 #include <QDebug>
 #include <KSharedConfig>
+#include <QCommandLineParser>
 #include "wallpaperUtils.h"
 #include "wallpaper.h"
 
@@ -9,6 +10,20 @@ int main(int argc, char *argv[])
     QCoreApplication app(argc, argv);
     QCoreApplication::setOrganizationName("app.tantalising");
     QCoreApplication::setApplicationName("plasma adaptive accent color");
+
+    QCommandLineParser *parser = new QCommandLineParser;
+    parser->addHelpOption();
+    parser->setApplicationDescription(
+        "This tool automatically sets an accent color generated from wallpaper.");
+    parser->addOption(
+        QCommandLineOption(QStringLiteral("version"), "Shows the application version"));
+
+    parser->process(app);
+
+    if(parser->isSet("version")){
+        qInfo() << "1.0.2";
+        exit(0);
+    }
 
     const auto wallpaperConfigFilePath = getWallpaperConfigFilePath();
     if(!fileExists(wallpaperConfigFilePath)) {
