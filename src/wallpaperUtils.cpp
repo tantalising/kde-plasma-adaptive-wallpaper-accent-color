@@ -24,32 +24,24 @@ const bool fileExists(QString filePath){
 const QString getCurrentColorScheme(KSharedConfigPtr& globalConfig){
     KConfigGroup generalGroup(globalConfig, QStringLiteral("General"));
     generalGroup.sync();
-    if(generalGroup.hasKey("ColorScheme")){
-        const auto colorscheme = generalGroup.readEntry("ColorScheme");
-        generalGroup.writeEntry("ColorScheme", colorscheme+".temp");
-        generalGroup.sync();
-        return colorscheme;
-    } else {
-        showNotification(QStringLiteral("Plasma Adaptive accent Color"),
-                         QStringLiteral("error"),
-                         QStringLiteral("Incompatiable configuration"),
-                         QStringLiteral("You should pick an accent color in system settings. Don't use the one from colorscheme. quitting")
-                         );
-        globalConfig->~KSharedConfig();
-        QCoreApplication::quit();
+    auto colorscheme = generalGroup.readEntry("ColorScheme", "");
+    if(colorscheme == "") {
+        colorscheme = QStringLiteral("Breeze"); // at least let me assume breeze is there
     }
-    return "";
+    generalGroup.writeEntry("ColorScheme", colorscheme+".temp");
+    generalGroup.sync();
+    return colorscheme;
 }
 
 void setAccentColor(KSharedConfigPtr& globalConfig, QString accentColor){
     KConfigGroup generalGroup(globalConfig, QStringLiteral("General"));
-    if(generalGroup.hasKey(QStringLiteral("AccentColor"))){
-        generalGroup.writeEntry(QStringLiteral("AccentColor"), accentColor);
-        const auto currentColorScheme = getCurrentColorScheme(globalConfig);
-        std::system(QString("plasma-apply-colorscheme %1").arg(currentColorScheme).toLatin1());
-        generalGroup.writeEntry(QStringLiteral("ColorScheme"), currentColorScheme);
-        generalGroup.sync();
-    }
+    generalGroup.writeEntry(QStringLiteral("AccentColor"), accentColor);
+    auto currentColorScheme = getCurrentColorScheme(globalConfig);
+
+    std::system(QString("plasma-apply-colorscheme %1").arg(currentColorScheme).toLatin1());
+    generalGroup.writeEntry(QStringLiteral("ColorScheme"), currentColorScheme);
+    generalGroup.sync();
+
 }
 
 void showNotification(QString appName, QString appIcon, QString summary, QString body, int timeout) {
