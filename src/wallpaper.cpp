@@ -117,6 +117,7 @@ void Wallpaper::applyAccentColor(KSharedConfigPtr& globalConfig) {
         QImage image = QImage(currentWallpaper);
 
         if(image.isNull()){
+            qInfo() << "Invalid image";
             return;
         }
 
