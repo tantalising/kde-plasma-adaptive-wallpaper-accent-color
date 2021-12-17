@@ -32,8 +32,8 @@ const QString getCurrentColorScheme(KSharedConfigPtr& globalConfig){
     } else {
         showNotification(QStringLiteral("Plasma Adaptive accent Color"),
                          QStringLiteral("error"),
-                         QStringLiteral("Invalid Colorscheme"),
-                         QStringLiteral("Your current color scheme is invalid. This is probably a bug in this app. Thank you.")
+                         QStringLiteral("Incompatiable configuration"),
+                         QStringLiteral("You should pick an accent color in system settings. Don't use the one from colorscheme.")
                          );
         globalConfig->~KSharedConfig();
         QCoreApplication::quit();
