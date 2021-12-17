@@ -20,7 +20,7 @@ private:
     KConfigGroup imagePlugin;
     KConfigGroup slideshowPlugin;
     QString currentPlugin;
-    QString lastUsedWallpaper;
+    std::optional<QString> lastUsedWallpaper;
 
     QString imagePath(void) const;
     QString slidePath(void) const;

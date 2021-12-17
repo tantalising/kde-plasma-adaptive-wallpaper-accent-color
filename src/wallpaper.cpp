@@ -86,6 +86,10 @@ void Wallpaper::init(void) {
     imagePlugin = KConfigGroup(&imageGroup, "General");
     slideshowPlugin = KConfigGroup(&slideGroup, "General");
     currentPlugin = highestResolutionMontiorConfig.readEntry("wallpaperplugin");
+
+    if(!lastUsedWallpaper.has_value()){
+        lastUsedWallpaper = "";
+    }
 }
 
 QVector<KConfigGroup> Wallpaper::getMonitorConfigList(void) const {
@@ -112,7 +116,7 @@ QString Wallpaper::wallpaperPath(void) const {
 void Wallpaper::applyAccentColor(KSharedConfigPtr& globalConfig) {
     const auto currentWallpaper = wallpaperPath();
     if(lastUsedWallpaper != currentWallpaper) {
-        qDebug() << "Got same wallpaper.";
+        qInfo() << "Got same wallpaper. No accent will be applied";
         lastUsedWallpaper = currentWallpaper;
         qInfo() << "applying accent color";
         QImage image = QImage(currentWallpaper);
