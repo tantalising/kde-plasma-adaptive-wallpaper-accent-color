@@ -40,7 +40,7 @@ KConfigGroup Wallpaper::getConfigOfHighestResolution(QVector<KConfigGroup> monit
                 highestResolutionConfig = currentConfig;
             }
         }
-        qInfo() << "Highest resolution is" << currentResolution;
+        qDebug() << "Highest resolution is" << currentResolution;
         return highestResolutionConfig;
     }
 }
@@ -112,12 +112,14 @@ QString Wallpaper::wallpaperPath(void) const {
 void Wallpaper::applyAccentColor(KSharedConfigPtr& globalConfig) {
     const auto currentWallpaper = wallpaperPath();
     if(lastUsedWallpaper != currentWallpaper) {
+        qDebug() << "Got same wallpaper.";
         lastUsedWallpaper = currentWallpaper;
         qInfo() << "applying accent color";
         QImage image = QImage(currentWallpaper);
 
         if(image.isNull()){
             qInfo() << "Invalid image";
+            qDebug() << "The wallpaper path is " << currentWallpaper;
             return;
         }
 
