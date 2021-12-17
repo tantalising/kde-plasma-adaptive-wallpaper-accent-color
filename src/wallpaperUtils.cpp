@@ -24,21 +24,11 @@ const bool fileExists(QString filePath){
 const QString getCurrentColorScheme(KSharedConfigPtr& globalConfig){
     KConfigGroup generalGroup(globalConfig, QStringLiteral("General"));
     generalGroup.sync();
-    if(generalGroup.hasKey("ColorScheme")){
-        const auto colorscheme = generalGroup.readEntry("ColorScheme");
-        generalGroup.writeEntry("ColorScheme", colorscheme+".temp");
-        generalGroup.sync();
-        return colorscheme;
-    } else {
-        showNotification(QStringLiteral("Plasma Adaptive accent Color"),
-                         QStringLiteral("error"),
-                         QStringLiteral("Invalid Colorscheme"),
-                         QStringLiteral("Your current color scheme is invalid. This is probably a bug in this app. Thank you.")
-                         );
-        globalConfig->~KSharedConfig();
-        QCoreApplication::quit();
-    }
-    return "";
+
+    const auto colorscheme = generalGroup.readEntry("ColorScheme");
+    generalGroup.writeEntry("ColorScheme", colorscheme+".temp");
+    generalGroup.sync();
+    return colorscheme;
 }
 
 void setAccentColor(KSharedConfigPtr& globalConfig, QString accentColor){
