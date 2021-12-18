@@ -45,8 +45,41 @@ KConfigGroup Wallpaper::getConfigOfHighestResolution(QVector<KConfigGroup> monit
     }
 }
 
+void Wallpaper::initFallbackPath(QVector<KConfigGroup> fallbackConfigList) {
+    bool imagePathFound = false;
+    bool slidePathFound = false;
+    for(const auto& config : fallbackConfigList) {
+        const KConfigGroup currentGroup(&config, "Wallpaper");
+        if(currentGroup.groupList().contains("org.kde.image") && !imagePathFound){
+            const KConfigGroup intermediateGroup(&currentGroup, "org.kde.image");
+            const KConfigGroup currentSubGroup(&intermediateGroup, "General");
+            auto imagePath = currentSubGroup.readPathEntry("Image", "");
+            if(imagePath.contains("file://")){
+                imagePath = imagePath.mid(7);
+            }
+            if(fileExists(imagePath)) {
+                fallbackImagePath = imagePath;
+                imagePathFound = true;
+            }
+        }
+
+        if (currentGroup.groupList().contains("org.kde.slideshow") && !slidePathFound){
+            const KConfigGroup intermediateGroup(&currentGroup, "org.kde.slideshow");
+            const KConfigGroup currentSubGroup(&intermediateGroup, "General");
+            auto imagePath = currentSubGroup.readPathEntry("Image", "");
+            if(imagePath.contains("file://")){
+                imagePath = imagePath.mid(7);
+            }
+            if(fileExists(imagePath)) {
+                fallbackSlidePath = imagePath;
+                slidePathFound = true;
+            }
+        }
+    }
+}
+
 QString Wallpaper::imagePath(void) const {
-    auto path = imagePlugin.readPathEntry("Image", "I/know/fallback/path/is/not/needed");
+    auto path = imagePlugin.readPathEntry("Image", "");
     if(path.contains("file://")){
         return path.mid(7);
     }
@@ -54,7 +87,7 @@ QString Wallpaper::imagePath(void) const {
 }
 
 QString Wallpaper::slidePath(void) const {
-    auto path = slideshowPlugin.readPathEntry("Image", "I/know/fallback/path/is/not/needed");
+    auto path = slideshowPlugin.readPathEntry("Image", "");
     if(path.contains("file://")){
         return path.mid(7);
     }
@@ -90,6 +123,16 @@ void Wallpaper::init(void) {
     if(!lastUsedWallpaper.has_value()){
         lastUsedWallpaper = "";
     }
+
+    if(currentPlugin == "org.kde.image"){
+        if(!fileExists(imagePath())){
+            initFallbackPath(getfallbackConfigList());
+        }
+    } else {
+        if(!fileExists(slidePath())){
+            initFallbackPath(getfallbackConfigList());
+        }
+    }
 }
 
 QVector<KConfigGroup> Wallpaper::getMonitorConfigList(void) const {
@@ -106,11 +149,31 @@ QVector<KConfigGroup> Wallpaper::getMonitorConfigList(void) const {
     return monitorConfigList;
 }
 
+QVector<KConfigGroup> Wallpaper::getfallbackConfigList(void) const {
+    const KConfigGroup containmentGroup(wallpaperConfig, QStringLiteral("Containments"));
+    const QStringList containmentSubGroups = containmentGroup.groupList();
+
+    QVector<KConfigGroup> fallbackConfigList;
+    for(const auto& subGroup: containmentSubGroups){
+        const KConfigGroup currentSubGroup(&containmentGroup, subGroup);
+        if(currentSubGroup.groupList().contains("Wallpaper")) {
+            fallbackConfigList.append(currentSubGroup);
+        }
+    }
+    return fallbackConfigList;
+}
+
 QString Wallpaper::wallpaperPath(void) const {
     if(currentPlugin == "org.kde.image") {
-        return imagePath();
+        if(fileExists(imagePath())){
+            return imagePath();
+        }
+        return fallbackImagePath;
     }
-    return slidePath();
+    if(fileExists(slidePath())){
+        return slidePath();
+    }
+    return fallbackSlidePath;
 }
 
 void Wallpaper::applyAccentColor(KSharedConfigPtr& globalConfig) {
@@ -155,3 +218,6 @@ void Wallpaper::applyAccentColor(KSharedConfigPtr& globalConfig) {
 Wallpaper::~Wallpaper(){
     wallpaperConfig->~KSharedConfig();
 }
+
+ QString Wallpaper::fallbackImagePath = "";
+ QString Wallpaper::fallbackSlidePath = "";

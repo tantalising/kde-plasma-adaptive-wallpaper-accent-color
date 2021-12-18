@@ -24,10 +24,14 @@ private:
 
     QString imagePath(void) const;
     QString slidePath(void) const;
+    static QString fallbackImagePath;
+    static QString fallbackSlidePath;
     QString wallpaperPath(void) const; //path according to current plugin
     static int getResolutionOfMonitorConfig(KConfigGroup monitorConfig);
     static KConfigGroup getConfigOfHighestResolution(QVector<KConfigGroup> monitorConfigList);
+    static void initFallbackPath(QVector<KConfigGroup> fallbackConfigList);
     QVector<KConfigGroup> getMonitorConfigList(void) const;
+    QVector<KConfigGroup> getfallbackConfigList(void) const;
     void init(void);
 };
 

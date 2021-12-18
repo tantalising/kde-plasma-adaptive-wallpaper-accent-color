@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     parser->process(app);
 
     if(parser->isSet("version")){
-        qInfo() << "1.0.2";
+        qInfo() << "1.0.3";
         exit(0);
     }
 
@@ -36,7 +36,6 @@ int main(int argc, char *argv[])
         showNonExistentConfigFileError();
         app.quit();
     }
-
 
     Wallpaper wallpaper(wallpaperConfigFilePath);
     auto globalConfig = KSharedConfig::openConfig(globalConfigFilePath);
