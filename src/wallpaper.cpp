@@ -116,14 +116,12 @@ QString Wallpaper::wallpaperPath(void) const {
 void Wallpaper::applyAccentColor(KSharedConfigPtr& globalConfig) {
     const auto currentWallpaper = wallpaperPath();
     if(lastUsedWallpaper != currentWallpaper) {
-        qInfo() << "Got same wallpaper. No accent will be applied";
         lastUsedWallpaper = currentWallpaper;
         qInfo() << "applying accent color";
         QImage image = QImage(currentWallpaper);
 
         if(image.isNull()){
-            qInfo() << "Invalid image";
-            qDebug() << "The wallpaper path is " << currentWallpaper;
+            qInfo() << "Invalid image. The wallpaper path is" << currentWallpaper;
             return;
         }
 
@@ -148,6 +146,9 @@ void Wallpaper::applyAccentColor(KSharedConfigPtr& globalConfig) {
         const auto b = QVariant(color.green()).toString();
         const QString accentColor = r+","+g+","+b;
         setAccentColor(globalConfig, accentColor);
+
+    } else {
+        qInfo() << "Got same wallpaper. No accent will be applied";
     }
 }
 

@@ -26,7 +26,7 @@ const QString getCurrentColorScheme(KSharedConfigPtr& globalConfig){
     generalGroup.sync();
     auto colorscheme = generalGroup.readEntry("ColorScheme", "");
     if(colorscheme == "") {
-        colorscheme = QStringLiteral("Breeze"); // at least let me assume breeze is there
+        colorscheme = QStringLiteral("BreezeLight"); // at least let me assume breeze is there
     }
     generalGroup.writeEntry("ColorScheme", colorscheme+".temp");
     generalGroup.sync();
