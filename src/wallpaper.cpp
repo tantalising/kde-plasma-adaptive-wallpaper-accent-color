@@ -11,7 +11,7 @@ Wallpaper::Wallpaper(QString wallpaperConfigFilePath) : wallpaperConfig(KSharedC
     init(); //Don't unpack init here, it is used elsewhere also.
 }
 
-int Wallpaper::getResolutionOfMonitorConfig(KConfigGroup monitorConfig){
+int Wallpaper::getResolutionOfMonitorConfig(KConfigGroup& monitorConfig){
     auto const keys = monitorConfig.keyList();
     for(const auto &key: keys){
         if(key.contains("ItemGeometries-")){
@@ -45,12 +45,11 @@ KConfigGroup Wallpaper::getConfigOfHighestResolution(QVector<KConfigGroup> monit
     }
 }
 
-void Wallpaper::initFallbackPath(QVector<KConfigGroup> fallbackConfigList) {
-    bool imagePathFound = false;
-    bool slidePathFound = false;
+KConfigGroup Wallpaper::initFallbackPath(QVector<KConfigGroup> fallbackConfigList) {
+
     for(const auto& config : fallbackConfigList) {
         const KConfigGroup currentGroup(&config, "Wallpaper");
-        if(currentGroup.groupList().contains("org.kde.image") && !imagePathFound){
+        if(currentGroup.groupList().contains("org.kde.image")){
             const KConfigGroup intermediateGroup(&currentGroup, "org.kde.image");
             const KConfigGroup currentSubGroup(&intermediateGroup, "General");
             auto imagePath = currentSubGroup.readPathEntry("Image", "");
@@ -58,24 +57,11 @@ void Wallpaper::initFallbackPath(QVector<KConfigGroup> fallbackConfigList) {
                 imagePath = imagePath.mid(7);
             }
             if(fileExists(imagePath)) {
-                fallbackImagePath = imagePath;
-                imagePathFound = true;
-            }
-        }
-
-        if (currentGroup.groupList().contains("org.kde.slideshow") && !slidePathFound){
-            const KConfigGroup intermediateGroup(&currentGroup, "org.kde.slideshow");
-            const KConfigGroup currentSubGroup(&intermediateGroup, "General");
-            auto imagePath = currentSubGroup.readPathEntry("Image", "");
-            if(imagePath.contains("file://")){
-                imagePath = imagePath.mid(7);
-            }
-            if(fileExists(imagePath)) {
-                fallbackSlidePath = imagePath;
-                slidePathFound = true;
+                return config;
             }
         }
     }
+    return KConfigGroup();
 }
 
 QString Wallpaper::imagePath(void) const {
@@ -112,13 +98,7 @@ void Wallpaper::init(void) {
 
     highestResolutionMontiorConfig = getConfigOfHighestResolution(monitorConfigList);
 
-    const KConfigGroup intermediateGroup(&highestResolutionMontiorConfig, "Wallpaper");
-    const KConfigGroup imageGroup(&intermediateGroup, "org.kde.image");
-    const KConfigGroup slideGroup(&intermediateGroup, "org.kde.slideshow");
-
-    imagePlugin = KConfigGroup(&imageGroup, "General");
-    slideshowPlugin = KConfigGroup(&slideGroup, "General");
-    currentPlugin = highestResolutionMontiorConfig.readEntry("wallpaperplugin");
+    populatePluginConfig(highestResolutionMontiorConfig);
 
     if(!lastUsedWallpaper.has_value()){
         lastUsedWallpaper = "";
@@ -126,11 +106,13 @@ void Wallpaper::init(void) {
 
     if(currentPlugin == "org.kde.image"){
         if(!fileExists(imagePath())){
-            initFallbackPath(getfallbackConfigList());
+           highestResolutionMontiorConfig = initFallbackPath(getfallbackConfigList());
+           populatePluginConfig(highestResolutionMontiorConfig);
         }
     } else {
         if(!fileExists(slidePath())){
-            initFallbackPath(getfallbackConfigList());
+           highestResolutionMontiorConfig = initFallbackPath(getfallbackConfigList());
+           populatePluginConfig(highestResolutionMontiorConfig);
         }
     }
 }
@@ -165,15 +147,9 @@ QVector<KConfigGroup> Wallpaper::getfallbackConfigList(void) const {
 
 QString Wallpaper::wallpaperPath(void) const {
     if(currentPlugin == "org.kde.image") {
-        if(fileExists(imagePath())){
             return imagePath();
-        }
-        return fallbackImagePath;
     }
-    if(fileExists(slidePath())){
-        return slidePath();
-    }
-    return fallbackSlidePath;
+    return slidePath();
 }
 
 void Wallpaper::applyAccentColor(KSharedConfigPtr& globalConfig) {
@@ -219,5 +195,12 @@ Wallpaper::~Wallpaper(){
     wallpaperConfig->~KSharedConfig();
 }
 
- QString Wallpaper::fallbackImagePath = "";
- QString Wallpaper::fallbackSlidePath = "";
+void Wallpaper::populatePluginConfig(KConfigGroup& config){
+    const KConfigGroup intermediateGroup(&highestResolutionMontiorConfig, "Wallpaper");
+    const KConfigGroup imageGroup(&intermediateGroup, "org.kde.image");
+    const KConfigGroup slideGroup(&intermediateGroup, "org.kde.slideshow");
+
+    imagePlugin = KConfigGroup(&imageGroup, "General");
+    slideshowPlugin = KConfigGroup(&slideGroup, "General");
+    currentPlugin = highestResolutionMontiorConfig.readEntry("wallpaperplugin");
+}

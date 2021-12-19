@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     parser->process(app);
 
     if(parser->isSet("version")){
-        qInfo() << "1.0.3";
+        qInfo() << "1.0.4";
         exit(0);
     }
 
